@@ -1,4 +1,4 @@
-#!/Users/pranika/RUTGERS/mscs/extraa/internship work/nj transit/WORK/NJTransit_RAG_Chatbot/.venv/bin/python3.12
+#!/Users/pranika/RUTGERS/mscs/extraa/internship_work/nj_transit/WORK/NJTransit_RAG_Chatbot/.venv/bin/python3.12
 """A command line tool for extracting text and images from PDF and
 output it to plain text, html, xml or tags.
 """

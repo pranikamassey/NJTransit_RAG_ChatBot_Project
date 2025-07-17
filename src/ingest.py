@@ -8,7 +8,7 @@ import numpy as np
 import pdfplumber
 import openai
 
-from common import OPENAI_API_KEY
+from src.common import OPENAI_API_KEY
 
 def chunk_text(text, max_tokens=400, overlap=50):
     words = text.split()
@@ -36,11 +36,15 @@ def main(pdf_path, index_output, meta_output):
     openai.api_key = OPENAI_API_KEY
     embeddings = []
     for i, chunk in enumerate(all_chunks, start=1):
+        
         resp = openai.embeddings.create(
             model="text-embedding-ada-002",
             input=chunk
         )
-        embeddings.append(resp["data"][0]["embedding"])
+    # pull out the embedding from the response object
+        embedding = resp.data[0].embedding
+        embeddings.append(embedding)
+
         if i % 50 == 0:
             print(f"🔹 Embedded {i}/{len(all_chunks)}")
     print("🔵 Embeddings complete.")

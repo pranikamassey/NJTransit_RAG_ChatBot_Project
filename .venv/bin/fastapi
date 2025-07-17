@@ -1,6 +1,4 @@
-#!/bin/sh
-'''exec' "/Users/pranika/RUTGERS/mscs/extraa/internship work/nj transit/WORK/NJTransit_RAG_Chatbot/.venv/bin/python3.12" "$0" "$@"
-' '''
+#!/Users/pranika/RUTGERS/mscs/extraa/internship_work/nj_transit/WORK/NJTransit_RAG_Chatbot/.venv/bin/python3.12
 # -*- coding: utf-8 -*-
 import re
 import sys

@@ -6,7 +6,7 @@ import openai
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from common import OPENAI_API_KEY
+from src.common import OPENAI_API_KEY
 
 # 1) Configure OpenAI
 openai.api_key = OPENAI_API_KEY
@@ -31,11 +31,15 @@ async def query(body: Query):
         raise HTTPException(400, "Empty question")
 
     # 4) Embed user query
+  
+    
     emb_resp = openai.embeddings.create(
         model="text-embedding-ada-002",
         input=q
     )
-    q_emb = emb_resp["data"][0]["embedding"]
+    # extract the embedding vector
+    q_emb = emb_resp.data[0].embedding
+
 
     # 5) Search FAISS
     D, I = index.search(np.array([q_emb], dtype="float32"), k=5)
@@ -57,11 +61,13 @@ async def query(body: Query):
     prompt += f"Question: {q}\nAnswer:"
 
     # 8) Call ChatCompletion
-    chat = openai.ChatCompletion.create(
+
+    resp = openai.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.0,
         max_tokens=300
     )
-    answer = chat.choices[0].message.content.strip()
+    answer = resp.choices[0].message.content.strip()
+
     return {"answer": answer}
