@@ -1,4 +1,24 @@
 # src/ingest.py
+
+
+##steps for referencee
+#source .venv/bin/activate
+
+## Ingest the first PDF, overwriting old index/meta:
+# python src/ingest.py \
+#   --pdf data/AccessLinkCustomerGuidelines.pdf \
+#   --index-output data/index.faiss \
+#   --meta-output data/meta.json
+
+## Ingest the second PDF, but this time *append* to the existing index/meta:
+# python src/ingest.py \
+#   --pdf data/AnotherPolicyDoc.pdf \
+#   --index-output data/index.faiss \
+#   --meta-output data/meta.json \
+#   --append
+
+
+
 import argparse
 import json
 import os

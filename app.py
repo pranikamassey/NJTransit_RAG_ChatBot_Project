@@ -29,7 +29,7 @@ def ask(history, user_input):
 # Custom CSS
 custom_css = """
 #chatbot .message.user { 
-    background-color: #0052A5 !important; 
+    background-color: #FF9913 !important; 
     color: #fff !important; 
 }
 #chatbot .message.assistant {
