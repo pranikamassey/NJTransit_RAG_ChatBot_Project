@@ -1,0 +1,15 @@
+1. ctrl+c on all
+2. In any open shell that currently shows (.venv) in its prompt, 
+run: 
+    >>deactivate
+3. check 
+    >>which python
+4. >> source .venv/bin/activate
+5. >> which python
+    >>which pip
+6. >>pip install -r requirements.txt
+7. >>uvicorn src.api:app --host 127.0.0.1 --port 8000
+
+In a new terminal
+8. >>source .venv/bin/activate   
+    >>python app.py
