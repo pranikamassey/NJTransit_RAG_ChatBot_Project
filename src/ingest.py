@@ -8,9 +8,17 @@
 
 # python -m src.ingest \
 #   --pdf data/ \
-#   --url https://njtransit.com/accessibility \
+#   --url \
+#     https://njtransit.com/accessibility \
+#     https://www.njtransit.com/accessibility/access-link-ada-paratransit \
+#     https://www.njtransit.com/accessibility/community-transportation \
+#     https://www.njtransit.com/schedules-and-fares/reduced-fare-program \
+#     https://www.njtransit.com/magnusmode \
+#     https://www.njtransit.com/accessibility/voter-registration-application \
+#     https://www.njtransit.com/ffy-2024-grant-application \
 #   --index-output data/index.faiss \
 #   --meta-output data/meta.json
+
 
 
 import argparse
@@ -142,9 +150,10 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--url",
-        nargs="*",
+        required=False,
+        nargs="+",
         default=[],
-        help="Public webpage URLs to ingest"
+        help="One or more public webpage URLs to ingest"
     )
 
     parser.add_argument(
@@ -158,4 +167,9 @@ if __name__ == "__main__":
         help="Where to write the combined metadata JSON"
     )
     args = parser.parse_args()
-    main(args.pdf, args.url, args.index_output, args.meta_output)
+    main(
+        pdf_inputs   = args.pdf,
+        url_inputs   = args.url,
+        index_output = args.index_output,
+        meta_output  = args.meta_output
+    )
