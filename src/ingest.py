@@ -39,18 +39,42 @@ def chunk_text(text, max_tokens=400, overlap=50):
         start += max_tokens - overlap
     return chunks
 
-def main(pdf_path, index_output, meta_output):
-    print("🟢 Starting ingestion…")
+def main(pdf_inputs, index_output, meta_output):
+    # pdf_inputs: list of file-or-dir paths
+    print(f"🟢 Starting ingestion of {len(pdf_inputs)} input path(s)…")
 
-    # 1) Read & chunk
-    all_chunks, meta = [], []
-    with pdfplumber.open(pdf_path) as pdf:
-        for page_no, page in enumerate(pdf.pages, start=1):
-            text = page.extract_text() or ""
-            for chunk in chunk_text(text):
-                all_chunks.append(chunk)
-                meta.append({"page": page_no, "text": chunk})
-    print(f"🔸 Extracted {len(all_chunks)} chunks.")
+    # 1) Collect all PDF files
+    pdf_files = []
+    for p in pdf_inputs:
+        if os.path.isdir(p):
+            for fn in os.listdir(p):
+                if fn.lower().endswith(".pdf"):
+                    pdf_files.append(os.path.join(p, fn))
+        elif p.lower().endswith(".pdf") and os.path.isfile(p):
+            pdf_files.append(p)
+        else:
+            print(f"⚠️  Skipping non-PDF path: {p}")
+
+    if not pdf_files:
+        print("❌ No PDFs found to ingest. Exiting.")
+        return
+
+    # 2) Read & chunk each PDF
+    all_chunks = []
+    meta       = []
+    for pdf_file in pdf_files:
+        print(f"📄 Ingesting {pdf_file}")
+        with pdfplumber.open(pdf_file) as pdf:
+            for page_no, page in enumerate(pdf.pages, start=1):
+                text = page.extract_text() or ""
+                for chunk in chunk_text(text):
+                    all_chunks.append(chunk)
+                    meta.append({
+                        "source": os.path.basename(pdf_file),
+                        "page": page_no,
+                        "text": chunk
+                    })
+    print(f"🔸 Extracted {len(all_chunks)} total chunks.")
 
     # 2) Embed via new API
     openai.api_key = OPENAI_API_KEY
@@ -83,9 +107,24 @@ def main(pdf_path, index_output, meta_output):
     print(f"🟣 Wrote index to {index_output} and meta to {meta_output}")
 
 if __name__ == "__main__":
-    p = argparse.ArgumentParser()
-    p.add_argument("--pdf",          required=True)
-    p.add_argument("--index-output", default="data/index.faiss")
-    p.add_argument("--meta-output",  default="data/meta.json")
-    args = p.parse_args()
+    parser = argparse.ArgumentParser(
+        description="Ingest one or more PDFs (or directories of PDFs) into a single FAISS index."
+    )
+    parser.add_argument(
+        "--pdf",
+        required=True,
+        nargs="+",
+        help="One or more paths: either PDF files or folders containing PDFs"
+    )
+    parser.add_argument(
+        "--index-output",
+        default="data/index.faiss",
+        help="Where to write the combined FAISS index"
+    )
+    parser.add_argument(
+        "--meta-output",
+        default="data/meta.json",
+        help="Where to write the combined metadata JSON"
+    )
+    args = parser.parse_args()
     main(args.pdf, args.index_output, args.meta_output)

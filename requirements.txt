@@ -5,3 +5,7 @@ faiss-cpu
 pdfplumber
 openai
 python-dotenv
+requests
+beautifulsoup4
+lxml
+
