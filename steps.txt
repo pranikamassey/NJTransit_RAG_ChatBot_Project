@@ -13,3 +13,16 @@ run:
 In a new terminal
 8. >>source .venv/bin/activate   
     >>python app.py
+
+
+
+
+ ONE TIME
+
+ Data ingest
+
+ python -m src.ingest \
+  --pdf data/ \
+  --url https://njtransit.com/accessibility \
+  --index-output data/index.faiss \
+  --meta-output data/meta.json   

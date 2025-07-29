@@ -4,19 +4,13 @@
 ##steps for referencee
 #source .venv/bin/activate
 
-## Ingest the first PDF, overwriting old index/meta:
-# python src/ingest.py \
-#   --pdf data/AccessLinkCustomerGuidelines.pdf \
+
+
+# python -m src.ingest \
+#   --pdf data/ \
+#   --url https://njtransit.com/accessibility \
 #   --index-output data/index.faiss \
 #   --meta-output data/meta.json
-
-## Ingest the second PDF, but this time *append* to the existing index/meta:
-# python src/ingest.py \
-#   --pdf data/AnotherPolicyDoc.pdf \
-#   --index-output data/index.faiss \
-#   --meta-output data/meta.json \
-#   --append
-
 
 
 import argparse
@@ -27,6 +21,9 @@ import faiss
 import numpy as np
 import pdfplumber
 import openai
+import requests
+from bs4 import BeautifulSoup
+
 
 from src.common import OPENAI_API_KEY
 
@@ -39,9 +36,10 @@ def chunk_text(text, max_tokens=400, overlap=50):
         start += max_tokens - overlap
     return chunks
 
-def main(pdf_inputs, index_output, meta_output):
+def main(pdf_inputs, url_inputs, index_output, meta_output):
     # pdf_inputs: list of file-or-dir paths
-    print(f"🟢 Starting ingestion of {len(pdf_inputs)} input path(s)…")
+    print(f"🟢 Ingesting {len(pdf_inputs)} PDF(s) + {len(url_inputs)} URL(s)…")
+    
 
     # 1) Collect all PDF files
     pdf_files = []
@@ -58,6 +56,7 @@ def main(pdf_inputs, index_output, meta_output):
     if not pdf_files:
         print("❌ No PDFs found to ingest. Exiting.")
         return
+    
 
     # 2) Read & chunk each PDF
     all_chunks = []
@@ -74,6 +73,31 @@ def main(pdf_inputs, index_output, meta_output):
                         "page": page_no,
                         "text": chunk
                     })
+    # --- Web ingestion, new! ---
+    for link in url_inputs:
+        print(f"🌐 Fetching {link}")
+        resp = requests.get(link, timeout=10)
+        resp.raise_for_status()
+        # parse visible text
+        soup = BeautifulSoup(resp.text, "lxml")
+        # remove scripts/styles
+        for tag in soup(["script","style","header","footer","nav","aside"]):
+            tag.decompose()
+        text = soup.get_text(separator="\n")
+        # optional: split on paragraphs
+        paras = [p.strip() for p in text.split("\n") if p.strip()]
+        combined = "\n\n".join(paras)
+        # chunk & record metadata
+        for i, chunk in enumerate(chunk_text(combined), start=1):
+            all_chunks.append(chunk)
+            meta.append({
+                "source": link,
+                "page": i,           # or None, or 0 — but key must exist
+                "text": chunk
+            })
+
+
+   
     print(f"🔸 Extracted {len(all_chunks)} total chunks.")
 
     # 2) Embed via new API
@@ -112,10 +136,17 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--pdf",
-        required=True,
-        nargs="+",
-        help="One or more paths: either PDF files or folders containing PDFs"
+        nargs="*",
+        default=[],
+        help="PDF files or directories to ingest"
     )
+    parser.add_argument(
+        "--url",
+        nargs="*",
+        default=[],
+        help="Public webpage URLs to ingest"
+    )
+
     parser.add_argument(
         "--index-output",
         default="data/index.faiss",
@@ -127,4 +158,4 @@ if __name__ == "__main__":
         help="Where to write the combined metadata JSON"
     )
     args = parser.parse_args()
-    main(args.pdf, args.index_output, args.meta_output)
+    main(args.pdf, args.url, args.index_output, args.meta_output)

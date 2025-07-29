@@ -3,6 +3,10 @@ import os
 import requests
 import gradio as gr
 
+#to import requirements
+#pip install -r requirements.txt
+
+
 API_URL = "http://127.0.0.1:8000/query"
 
 def ask(history, user_input):
